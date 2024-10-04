@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jsSocketDebugger</title>
+</head>
+
+<body>
+    <div id="toolbar">
+        <button id="addSocketBtn">追加</button>
+        <button id="delSocketBtn">削除</button>
+        <button>設定</button>
+    </div>
+
+    <div id="splitDisplay">
+        <div id="socketInfosWrap">
+            <table id="socketInfos">
+                <tr>
+                    <th>ソケット名</th>
+                    <th>cron</th>
+                    <th>状態</th>
+                    <th>ログ</th>
+                    <th>スクリプト</th>
+                    <th>ポート</th>
+                </tr>
+            </table>
+        </div>
+
+        <div id="detail">
+            <div id="detailName">スクリプト(対象無し)</div>
+            <textarea id="detailTxt" showingClass=""></textarea>
+        </div>
+    </div>
+
+    <script>
+        let socketJson = {
+            "1": {
+                "socketName": "クライアント1",
+                "cron": "*****",
+                "state": "実行中",
+                "log": "aaa",
+                "script": `console.log("hello server");`,
+                "port": "43632",
+            }
+        };
+
+        function addRow(socketName, cron, state, log, script, port) {
+            const addElm = document.createElement("tr");
+            addElm.setAttribute("class", "socketInfo");
+            addElm.innerHTML = `
+                    <td class="socketName">${socketName}</td>
+                    <td class="cron">${cron}</td>
+                    <td class="state">${state}</td>
+                    <td class="log"><button class="showDetailBtn" label="ログ" data="${log}">表示</button></td>
+                    <td class="script"><button class="showDetailBtn" label="スクリプト" data="${script}">表示</button></td>
+                    <td class="port">${port}</td>
+                `;
+
+            socketInfos.appendChild(addElm);
+            let showDetailBtns = addElm.querySelectorAll(".showDetailBtn");
+
+            for (let btn of showDetailBtns) {
+                btn.addEventListener("click", () => {
+                    detail.style.display = "block";
+                    detailName.innerHTML = btn.getAttribute("label") + `(${socketName})`;
+                    detailTxt.setAttribute("showingClass", btn.parentElement.className);
+                    detailTxt.value = btn.getAttribute("data");
+                });
+            }
+
+            addElm.addEventListener("click", () => {
+                let selectedElm = document.getElementsByClassName("selectingRow");
+                if (selectedElm.length != 0) {
+                    selectedElm[0].classList.remove("selectingRow");
+                }
+
+                addElm.classList.add("selectingRow");
+            });
+        }
+
+
+        addSocketBtn.addEventListener("click", () => {
+            const socketName = window.prompt("ソケット名");
+            const port = window.prompt("ポート番号");
+            addRow("ソケット名", "なし", "停止", "", "", port);
+        });
+
+        delSocketBtn.addEventListener("click", () => {
+            let selectedElm = document.getElementsByClassName("selectingRow");
+            if (selectedElm.length == 0) return;
+            
+            const input = window.confirm("削除してもよろしいですか？");
+            if(input) selectedElm[0].remove();
+        });
+        
+        detailTxt.addEventListener("input", ()=>{
+            let selectedElm = document.getElementsByClassName("selectingRow");
+            if (selectedElm.length == 0) return;
+            selectedElm = selectedElm[0];
+
+            const showingClass = detailTxt.getAttribute("showingClass");
+            console.log(selectedElm);
+            const btn = selectedElm.querySelector("." + showingClass);
+            btn.setAttribute("data", detailTxt.value);
+            console.log(detailTxt.value, btn.getAttribute("data"));
+        });
+
+
+
+        addRow("クライアント1", "*****", "起動中", "success boot", "console.log('I am クライアント1)'", "32135");
+        addRow("サーバー1", "*****", "起動中", "success boot", "console.log(I am サーバー1)'", "32135");
+        addRow("クライアント2", "*****", "起動中", "success boot", "console.log('I am クライアント2)'", "32135");
+    </script>
+
+    <style>
+        #toolbar {
+            display: flex;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            width: 100%;
+            border-bottom: solid 1px #aaa;
+            height: 5vh;
+        }
+
+        #toolbar>* {
+            /* padding: 0.5rem;
+            border-top: solid 1px #000;
+            border-right: solid 1px #000;
+            border-bottom: solid 1px #000; */
+        }
+
+        #splitDisplay {
+            display: flex;
+            gap: 1rem;
+            height: 90vh;
+        }
+
+        #socketInfosWrap {
+            width: 70%;
+            height: 100%;
+        }
+
+        #socketInfos {
+            width: 100%;
+            text-align: center;
+            border-collapse: collapse;
+        }
+
+        tr,
+        td,
+        th {
+            padding: 5px;
+            border: 1px solid #333;
+        }
+
+        th {
+            background-color: #2c88d9;
+            color: #FFF;
+            height: 1rem;
+        }
+
+        #detail {
+            width: 25%;
+        }
+
+        #detail>* {
+            width: 100%;
+        }
+
+        #detailTxt {
+            height: 100%;
+            overflow: scroll;
+        }
+
+        .selectingRow {
+            background-color: #9ac3e7;
+        }
+    </style>
+</body>
+
+</html>
