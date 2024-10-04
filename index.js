@@ -1,51 +1,22 @@
 const WebSocket = require('ws');
-// const http = require("http");
 const https = require('https')
 var fs = require('fs');
 let connecting = true;
-
-console.log("管理画面サーバー起動");
-// const manageViewServer = http.createServer((request, response) => {
-//     const url = request.url;
-//     let resStr = fs.readFileSync("./index.html", 'utf-8');;
-
-//     console.log(url);
-//         response.write(resStr);
-//         response.end();
-// });
 
 const options = {
     cert: fs.readFileSync('./fullchain.pem'),
     key: fs.readFileSync('./privkey.pem'),
 }
 
+console.log("管理画面サーバー起動");
 const manageViewServer = https.createServer(options);
-// manageViewServer.on((request, response) => {
-//         const url = request.url;
-//         let resStr = fs.readFileSync("./index.html", 'utf-8');
-    
-//         console.log(url);
-//         response.write(resStr);
-//         response.end();
-//     });
-
 manageViewServer.on('request', (req, res) => {
     let resStr = fs.readFileSync("./index.html", 'utf-8');
     res.write(resStr)
     res.end()
 })
 
-manageViewServer.listen(8445, "galleon.yachiyo.tech");
-
-
-
-// try {
-    //     eval("console.log('aaa')");
-    //     eval("console.lo('bbb')");
-    // } catch (e) {
-        //     console.log('Error: ' + e.message);
-        // }
-        
+manageViewServer.listen(8445, "galleon.yachiyo.tech");        
 
 function makeWsServer(port){
     const server = new WebSocket.Server({ port: port });
