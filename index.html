@@ -35,27 +35,45 @@
     </div>
 
     <script>
+        // const ws = new WebSocket("wss://galleon.yachiyo.tech:8846/unifast");
+        // ws.send("aaa");
+        // console.log("aaa");
+        // ws.onmessage = function(e){ console.log("bbb"); };
+
         let selectingRowElm;
 
-        let socketJson = {
-            "43632": {
-                "socketName": "クライアント1",
-                "cron": "*****",
-                "state": "実行中",
-                "log": "aaa",
-                "script": `console.log("hello server");`,
-            }
-        };
+        let wsStates = {};
+
+        function sendPostReq(file, strData) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://galleon.yachiyo.tech/unifast/" + file);
+            const body = JSON.stringify({
+                title: "Hello World",
+                body: "My POST request",
+                userId: 900,
+            });
+            xhr.onload = () => {
+                console.log(xhr.readyState);
+                if (xhr.readyState == 4) {
+                    console.log(JSON.parse(xhr.responseText));
+                } else {
+                    console.log(`Error: ${xhr.status}`);
+                }
+            };
+            xhr.send(strData);
+        }
+
+        sendPostReq("wsStates");
 
         function refreshTable() {
-            for(let delElm of document.getElementsByClassName("socketInfo")) delElm.remove();
+            for (let delElm of document.getElementsByClassName("socketInfo")) delElm.remove();
 
 
-            for (let port of Object.keys(socketJson)) {
+            for (let port of Object.keys(wsStates)) {
                 const addElm = document.createElement("tr");
                 addElm.setAttribute("class", "socketInfo");
 
-                const rowInfo = socketJson[port]; 
+                const rowInfo = wsStates[port];
 
                 addElm.innerHTML = `
                     <td class="socketName">${rowInfo["socketName"]}</td>
@@ -76,7 +94,7 @@
                         detailTxt.setAttribute("showingClass", btn.parentElement.className);
                         detailTxt.setAttribute("port", port);
                         detailTxt.setAttribute("key", btn.getAttribute("key"));
-                        detailTxt.value = socketJson[addElm.querySelector(".port").innerHTML][btn.getAttribute("key")];
+                        detailTxt.value = wsStates[addElm.querySelector(".port").innerHTML][btn.getAttribute("key")];
                     });
                 }
 
@@ -92,9 +110,9 @@
             }
         }
 
-        function addRow(socketName, port){
-            socketJson[port] = {
-                "socketName": socketName    ,
+        function addRow(socketName, port) {
+            wsStates[port] = {
+                "socketName": socketName,
                 "cron": "",
                 "state": "停止中",
                 "log": "",
@@ -103,14 +121,14 @@
 
             refreshTable();
         }
-        
+
         addSocketBtn.addEventListener("click", () => {
             const socketName = window.prompt("ソケット名");
             let port;
-            
-            for(;;){
+
+            for (; ;) {
                 port = window.prompt("ポート番号")
-                if(String(port) in Object.keys(socketJson)) {
+                if (String(port) in Object.keys(wsStates)) {
                     alert("そのポートは使用中です");
                     continue;
                 }
@@ -128,8 +146,8 @@
         });
 
         detailTxt.addEventListener("input", () => {
-            socketJson[selectingRowElm]
-            socketJson[detailTxt.getAttribute("port")][detailTxt.getAttribute("key")] = detailTxt.value;
+            wsStates[selectingRowElm]
+            wsStates[detailTxt.getAttribute("port")][detailTxt.getAttribute("key")] = detailTxt.value;
         });
 
 
