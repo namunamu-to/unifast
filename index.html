@@ -47,19 +47,21 @@
         function sendPostReq(file, strData) {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "https://galleon.yachiyo.tech/unifast/" + file);
-            const body = JSON.stringify({
-                title: "Hello World",
-                body: "My POST request",
-                userId: 900,
-            });
+
             xhr.onload = () => {
                 console.log(xhr.readyState);
                 if (xhr.readyState == 4) {
-                    console.log(JSON.parse(xhr.responseText));
+                    const json = JSON.parse(xhr.responseText);
+                    if(json["cmd"] == "wsStates") {
+                        wsStates = json["data"];
+                        refreshTable();
+                    } 
+                    console.log(json);
                 } else {
                     console.log(`Error: ${xhr.status}`);
                 }
             };
+            
             xhr.send(strData);
         }
 

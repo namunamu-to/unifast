@@ -8,18 +8,19 @@ let nowUser = ""; //uuid
 main();
 
 function main(){
-    readWsState();
+    readWsStates();
     runManageWsServer();
     runManageHttpServer();
+    restoreWsStates();
 }
 
 
-function saveWsState(){
+function saveWsStates(){
     const json = JSON.stringify(wsStates);
     fs.writeFileSync(wsStateFIle, json);
 }
 
-function readWsState(){
+function readWsStates(){
     const jsonStr = fs.readFileSync(wsStateFIle, 'utf-8');
     return JSON.parse(jsonStr);
 }
@@ -47,6 +48,21 @@ function runManageWsServer(){
     });
 }
 
+function restoreWsStates(){
+    for(let port of Object.keys(wsStates)){
+        if(wsStates[port]["state"] == "起動中") newWsServer(port);
+    }
+}
+
+function makeResData(cmd, strData){
+    const res = {
+        "cmd" : cmd,
+        "data" : strData
+    };
+
+    return res;
+}
+
 function runManageHttpServer(){
     const options = {
         cert: fs.readFileSync('./fullchain.pem'),
@@ -60,8 +76,11 @@ function runManageHttpServer(){
         let resStr = "";
         if(url == "/unifast/index.html" || url == "/unifast" || url == "/unifast/") resStr = fs.readFileSync("./index.html", 'utf-8');
         else if(url == "/unifast/wsStates") resStr = fs.readFileSync(wsStateFIle, 'utf-8');
-        res.write(resStr);
+        else if(url == "/unifast/addWsState") {
+            resStr = makeResData("wsStates", readWsStates());
+        }
 
+        res.write(resStr);
         res.end()
     })
     
@@ -76,20 +95,20 @@ function newWsServer(port){
     console.log("port : " + port);
     server.on('connection', (socket) => {
         console.log('Client connected');
-        wsStates[port] = server;
+        addWsStates();
     
         // 受信メッセージを処理
         socket.on('message', (data) => {
+            console.log(data);
         });
     
         // 接続中止
         socket.on('close', () => {
-            delete wsStates[port];
         });
     });
 }
 
-function newWsState(stateName, port, wsKind){
+function addWsStates(wsName, port, wsKind){
     const script = "";
     if(wsKind == "client"){
         script = `
@@ -110,7 +129,9 @@ function newWsState(stateName, port, wsKind){
                 console.log('Connection closed');
             };
         `;
+
     }else if(wsKind == "server"){
+        
         newWsServer(port);
 
         script = `
@@ -131,11 +152,13 @@ function newWsState(stateName, port, wsKind){
     }
 
     wsStates[port] = {
-            "socketName": "クライアント1",
-            "cron": "*****",
-            "state": "停止中",
-            "log": "aaa",
-            "script": script,
+        "socketName": wsName,
+        "cron": "",
+        "state": "停止中",
+        "log": "",
+        "script": script,
+        "wsKind": wsKind,
     };
-}
 
+    saveWsStates();
+}
