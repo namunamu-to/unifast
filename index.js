@@ -3,6 +3,11 @@ const https = require('https')
 var fs = require('fs');
 let socketState = {};
 
+function saveSocketState(){
+    const json = JSON.stringify(socketState);
+    fs.writeFile("./", json);
+}
+
 const options = {
     cert: fs.readFileSync('./fullchain.pem'),
     key: fs.readFileSync('./privkey.pem'),
