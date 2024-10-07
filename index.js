@@ -54,13 +54,13 @@ function restoreWsStates(){
     }
 }
 
-function makeResData(cmd, strData){
+function makeResData(kind, strData){
     const res = {
-        "cmd" : cmd,
+        "kind" : kind,
         "data" : strData
     };
 
-    return res;
+    return JSON.stringify(res);
 }
 
 function runManageHttpServer(){
@@ -73,11 +73,13 @@ function runManageHttpServer(){
     const manageViewServer = https.createServer(options);
     manageViewServer.on('request', (req, res) => {
         const url = req.url;
-        let resStr = "";
+        let resStr = "wrong url";
         if(url == "/unifast/index.html" || url == "/unifast" || url == "/unifast/") resStr = fs.readFileSync("./index.html", 'utf-8');
-        else if(url == "/unifast/wsStates") resStr = fs.readFileSync(wsStateFIle, 'utf-8');
+        else if(url == "/unifast/wsStates") resStr = makeResData("wsStates", fs.readFileSync(wsStateFIle, 'utf-8'));
         else if(url == "/unifast/addWsState") {
-            resStr = makeResData("wsStates", readWsStates());
+            resStr = makeResData("wsStates", fs.readFileSync(wsStateFIle, 'utf-8'));
+        }else {
+            resStr = makeResData("err", "urlが間違っています")
         }
 
         res.write(resStr);
@@ -131,7 +133,7 @@ function addWsStates(wsName, port, wsKind){
         `;
 
     }else if(wsKind == "server"){
-        
+
         newWsServer(port);
 
         script = `

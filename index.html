@@ -35,47 +35,44 @@
     </div>
 
     <script>
-        // const ws = new WebSocket("wss://galleon.yachiyo.tech:8846/unifast");
-        // ws.send("aaa");
-        // console.log("aaa");
-        // ws.onmessage = function(e){ console.log("bbb"); };
-
         let selectingRowElm;
-
         let wsStates = {};
+
+        main();
+        function main(){
+            sendPostReq("wsStates", "");
+        }
+
+
 
         function sendPostReq(file, strData) {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "https://galleon.yachiyo.tech/unifast/" + file);
 
             xhr.onload = () => {
-                console.log(xhr.readyState);
                 if (xhr.readyState == 4) {
                     const json = JSON.parse(xhr.responseText);
-                    if(json["cmd"] == "wsStates") {
-                        wsStates = json["data"];
+                    if(json["kind"] == "wsStates") {
+                        wsStates = JSON.parse(json["data"]);
                         refreshTable();
-                    } 
-                    console.log(json);
-                } else {
-                    console.log(`Error: ${xhr.status}`);
-                }
+                    }if(json["kind"] == "err") console.log(json["data"]);
+                        
+                } else console.log(`Error: ${xhr.status}`);
             };
-            
+
             xhr.send(strData);
         }
 
-        sendPostReq("wsStates");
+
+
 
         function refreshTable() {
             for (let delElm of document.getElementsByClassName("socketInfo")) delElm.remove();
 
-
             for (let port of Object.keys(wsStates)) {
+                const rowInfo = wsStates[port];
                 const addElm = document.createElement("tr");
                 addElm.setAttribute("class", "socketInfo");
-
-                const rowInfo = wsStates[port];
 
                 addElm.innerHTML = `
                     <td class="socketName">${rowInfo["socketName"]}</td>
@@ -153,7 +150,6 @@
         });
 
 
-        refreshTable();
     </script>
 
     <style>

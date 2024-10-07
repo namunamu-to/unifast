@@ -1,1 +1,11 @@
-{}
+{
+    "32452" : {
+        "socketName": "クライアント1",
+        "cron": "",
+        "state": "停止中",
+        "log": "",
+        "script": "",
+        "wsKind": "client"
+    }
+
+}
