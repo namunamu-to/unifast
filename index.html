@@ -30,90 +30,110 @@
 
         <div id="detail">
             <div id="detailName">スクリプト(対象無し)</div>
-            <textarea id="detailTxt" showingClass=""></textarea>
+            <textarea id="detailTxt" port="" key=""></textarea>
         </div>
     </div>
 
     <script>
-        const wss = new WebSocket("wss://galleon.yachiyo.tech:34542");
+        let selectingRowElm;
 
         let socketJson = {
-            "1": {
+            "43632": {
                 "socketName": "クライアント1",
                 "cron": "*****",
                 "state": "実行中",
                 "log": "aaa",
                 "script": `console.log("hello server");`,
-                "port": "43632",
             }
         };
 
-        function addRow(socketName, cron, state, log, script, port) {
-            const addElm = document.createElement("tr");
-            addElm.setAttribute("class", "socketInfo");
-            addElm.innerHTML = `
-                    <td class="socketName">${socketName}</td>
-                    <td class="cron">${cron}</td>
-                    <td class="state">${state}</td>
-                    <td class="log"><button class="showDetailBtn" label="ログ" data="${log}">表示</button></td>
-                    <td class="script"><button class="showDetailBtn" label="スクリプト" data="${script}">表示</button></td>
+        function refreshTable() {
+            for(let delElm of document.getElementsByClassName("socketInfo")) delElm.remove();
+
+
+            for (let port of Object.keys(socketJson)) {
+                const addElm = document.createElement("tr");
+                addElm.setAttribute("class", "socketInfo");
+
+                const rowInfo = socketJson[port]; 
+
+                addElm.innerHTML = `
+                    <td class="socketName">${rowInfo["socketName"]}</td>
+                    <td class="cron"><button class="showDetailBtn" label="cron" key="cron">表示</button></td>
+                    <td class="state">${rowInfo["state"]}</td>
+                    <td class="log"><button class="showDetailBtn" label="ログ" key="log">表示</button></td>
+                    <td class="script"><button class="showDetailBtn" label="スクリプト" key="script"}">表示</button></td>
                     <td class="port">${port}</td>
-                `;
+                    `;
 
-            socketInfos.appendChild(addElm);
-            let showDetailBtns = addElm.querySelectorAll(".showDetailBtn");
+                socketInfos.appendChild(addElm);
+                let showDetailBtns = addElm.querySelectorAll(".showDetailBtn");
 
-            for (let btn of showDetailBtns) {
-                btn.addEventListener("click", () => {
-                    detail.style.display = "block";
-                    detailName.innerHTML = btn.getAttribute("label") + `(${socketName})`;
-                    detailTxt.setAttribute("showingClass", btn.parentElement.className);
-                    detailTxt.value = btn.getAttribute("data");
-                });
-            }
-
-            addElm.addEventListener("click", () => {
-                let selectedElm = document.getElementsByClassName("selectingRow");
-                if (selectedElm.length != 0) {
-                    selectedElm[0].classList.remove("selectingRow");
+                for (let btn of showDetailBtns) {
+                    btn.addEventListener("click", () => {
+                        detail.style.display = "block";
+                        detailName.innerHTML = btn.getAttribute("label") + `(${rowInfo["socketName"]})`;
+                        detailTxt.setAttribute("showingClass", btn.parentElement.className);
+                        detailTxt.setAttribute("port", port);
+                        detailTxt.setAttribute("key", btn.getAttribute("key"));
+                        detailTxt.value = socketJson[addElm.querySelector(".port").innerHTML][btn.getAttribute("key")];
+                    });
                 }
 
-                addElm.classList.add("selectingRow");
-            });
+                addElm.addEventListener("click", () => {
+                    selectingRowElm = addElm
+                    let selectedElm = document.getElementsByClassName("selectingRow");
+                    if (selectedElm.length != 0) {
+                        selectedElm[0].classList.remove("selectingRow");
+                    }
+
+                    addElm.classList.add("selectingRow");
+                });
+            }
         }
 
+        function addRow(socketName, port){
+            socketJson[port] = {
+                "socketName": socketName    ,
+                "cron": "",
+                "state": "停止中",
+                "log": "",
+                "script": "",
+            }
 
+            refreshTable();
+        }
+        
         addSocketBtn.addEventListener("click", () => {
             const socketName = window.prompt("ソケット名");
-            const port = window.prompt("ポート番号");
-            addRow("ソケット名", "なし", "停止", "", "", port);
+            let port;
+            
+            for(;;){
+                port = window.prompt("ポート番号")
+                if(String(port) in Object.keys(socketJson)) {
+                    alert("そのポートは使用中です");
+                    continue;
+                }
+
+                break;
+            }
+
+            socketInfos[port] = {};
+            addRow(socketName, port);
         });
 
         delSocketBtn.addEventListener("click", () => {
-            let selectedElm = document.getElementsByClassName("selectingRow");
-            if (selectedElm.length == 0) return;
-            
             const input = window.confirm("削除してもよろしいですか？");
-            if(input) selectedElm[0].remove();
+            if (input) selectingRowElm.remove();
         });
-        
-        detailTxt.addEventListener("input", ()=>{
-            let selectedElm = document.getElementsByClassName("selectingRow");
-            if (selectedElm.length == 0) return;
-            selectedElm = selectedElm[0];
 
-            const showingClass = detailTxt.getAttribute("showingClass");
-            console.log(selectedElm);
-            const btn = selectedElm.querySelector("." + showingClass);
-            btn.setAttribute("data", detailTxt.value);
-            console.log(detailTxt.value, btn.getAttribute("data"));
+        detailTxt.addEventListener("input", () => {
+            socketJson[selectingRowElm]
+            socketJson[detailTxt.getAttribute("port")][detailTxt.getAttribute("key")] = detailTxt.value;
         });
 
 
-
-        addRow("クライアント1", "*****", "起動中", "success boot", "console.log('I am クライアント1)'", "32135");
-        addRow("サーバー1", "*****", "起動中", "success boot", "console.log(I am サーバー1)'", "32135");
-        addRow("クライアント2", "*****", "起動中", "success boot", "console.log('I am クライアント2)'", "32135");
+        refreshTable();
     </script>
 
     <style>
@@ -124,13 +144,6 @@
             width: 100%;
             border-bottom: solid 1px #aaa;
             height: 5vh;
-        }
-
-        #toolbar>* {
-            /* padding: 0.5rem;
-            border-top: solid 1px #000;
-            border-right: solid 1px #000;
-            border-bottom: solid 1px #000; */
         }
 
         #splitDisplay {

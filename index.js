@@ -1,20 +1,12 @@
 const WebSocket = require('ws');
 const https = require('https')
 var fs = require('fs');
-let connecting = true;
-let usingPorts = {};
+let socketState = {};
 
 const options = {
     cert: fs.readFileSync('./fullchain.pem'),
     key: fs.readFileSync('./privkey.pem'),
 }
-
-eval(`
-   const wss = new WebSocket("wss://galleon.yachiyo.tech:34542");
-   wss.addEventListener("open", e => {
-      console.log("接続が開かれたときに呼び出されるイベント");
-   });
-`);
 
 console.log("管理画面サーバー起動");
 const manageViewServer = https.createServer(options);
@@ -34,7 +26,7 @@ function makeWsServer(port){
     console.log("port : " + port);
     server.on('connection', (socket) => {
         console.log('Client connected');
-        usingPorts[port] = server;
+        socketState[port] = server;
     
         // 受信メッセージを処理
         socket.on('message', (data) => {
@@ -44,12 +36,12 @@ function makeWsServer(port){
     
         // 接続中止
         socket.on('close', () => {
-            delete usingPorts[port];
+            delete socketState[port];
             console.log('Client disconnected');
-            console.log(usingPorts);
+            console.log(socketState);
         });
     });
 
 }
 
-makeWsServer(34542);
+// makeWsServer(34542);
