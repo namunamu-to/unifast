@@ -6,7 +6,6 @@ const crypto = require("crypto");
 let wsStates = {};
 const wsStateFIle = "./wsStates.json";
 let nowUser = ""; //uuid
-// let lastSurvival = new Date().getTime();
 let lastSurvival;
 
 main();
@@ -89,6 +88,9 @@ function runManageHttpServer(){
         }
         else if(url == "/unifast/wsStates") resStr = makeResData("wsStates", fs.readFileSync(wsStateFIle, 'utf-8'));
         else if(url == "/unifast/addWsState") {
+            const json = req.body.msg;
+            console.log(json);
+            // addWsStates();
             resStr = makeResData("wsStates", fs.readFileSync(wsStateFIle, 'utf-8'));
         }else if(url == "/unifast/polling"){
             lastSurvival = new Date().getTime();
@@ -166,7 +168,7 @@ function addWsStates(wsName, port, wsKind){
     }
 
     wsStates[port] = {
-        "socketName": wsName,
+        "wsName": wsName,
         "cron": "",
         "state": "停止中",
         "log": "",

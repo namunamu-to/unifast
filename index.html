@@ -34,37 +34,73 @@
         </div>
     </div>
 
+
+    <script>
+        //ダイアログ
+        (function () {
+            const style = `
+            padding: 1rem;
+            font-size: 3rem;
+            width: fit-content;
+            height: fit-content;
+            background-color: #fff;
+            margin: auto;
+            display: none;
+            text-align: center;
+            top: 0;
+            left: 0;
+            border: soloid 1px #000;
+            position: fixed;
+        `;
+
+            const addHtml = `<div id="showDialogElm" style="${style}"></div>`;
+            document.body.innerHTML += addHtml;
+        }());
+
+
+        function dialog(innerHTML = "") {
+            if (innerHTML == "") {
+                showDialogElm.style.display = "none";
+                return;
+            }
+
+            showDialogElm.style.display = "block";
+            showDialogElm.innerHTML = innerHTML;
+        }
+
+    </script>
+
     <script>
         let selectingRowElm;
         let wsStates = {};
 
         main();
-        function main(){
+        function main() {
             sendPostReq("wsStates", "");
 
             //ポーリング
-            setInterval(()=>{
+            setInterval(() => {
                 sendPostReq("polling")
             }, 5000);
         }
 
-        
 
 
 
-        function sendPostReq(file, strData="") {
+
+        function sendPostReq(file, strData = "") {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "https://galleon.yachiyo.tech/unifast/" + file);
 
             xhr.onload = () => {
                 if (xhr.readyState == 4) {
                     const json = JSON.parse(xhr.responseText);
-                    if(json["kind"] == "wsStates") {
+                    if (json["kind"] == "wsStates") {
                         wsStates = JSON.parse(json["data"]);
                         refreshTable();
                     }
-                    else if(json["kind"] == "err") console.log(json["data"]);
-                    else if(json["kind"] == "polling") console.log(json["data"]);
+                    else if (json["kind"] == "err") console.log(json["data"]);
+                    else if (json["kind"] == "polling") console.log(json["data"]);
                 }
                 else console.log(`Error: ${xhr.status}`);
             };
@@ -118,34 +154,66 @@
             }
         }
 
-        function addRow(socketName, port) {
-            wsStates[port] = {
-                "socketName": socketName,
-                "cron": "",
-                "state": "停止中",
-                "log": "",
-                "script": "",
+        function addWsState(wsName, port, wsKind) {
+            sendStr = {
+                "wsName": wsName,
+                "port": port,
+                "wsKind": wsKind,
             }
 
-            refreshTable();
+
+            sendPostReq("addWsState", sendStr);
         }
 
         addSocketBtn.addEventListener("click", () => {
-            const socketName = window.prompt("ソケット名");
-            let port;
+            let html = `
+                <input id="wsNameInput" placeholder="ソケット名">
+                <input id="portInput" placeholder="ポート">
+                <select id="wsKindInput">
+                    <option>クライアント</option>
+                    <option>サーバー</option>
+                </select>
+                
+                <button id="addDialogBtn">追加</button>
+                <button id="closeDialogBtn">閉じる</button>
+            `;
+            dialog(html);
 
-            for (; ;) {
-                port = window.prompt("ポート番号")
-                if (String(port) in Object.keys(wsStates)) {
-                    alert("そのポートは使用中です");
-                    continue;
-                }
+            addDialogBtn.addEventListener("click", () => {
+                //ソケット名取得
+                const wsName = wsNameInput.value;
 
-                break;
-            }
+                //ポート取得
+                const port = portInput.value;
 
-            socketInfos[port] = {};
-            addRow(socketName, port);
+                //wsの種類取得
+                const wsKindIdx = wsKindInput.selectedIndex;
+                const wsKind = wsKindInput.options[wsKindIdx].innerText;
+
+                
+
+                addWsState(wsName, port, wsKind);
+            });
+
+            closeDialogBtn.addEventListener("click", () => {
+                dialog("");
+            });
+
+            // const socketName = window.prompt("ソケット名");
+            // let port;
+
+            // for (; ;) {
+            //     port = window.prompt("ポート番号")
+            //     if (String(port) in Object.keys(wsStates)) {
+            //         alert("そのポートは使用中です");
+            //         continue;
+            //     }
+
+            //     break;
+            // }
+
+            // socketInfos[port] = {};
+            // addWsState(socketName, port);
         });
 
         delSocketBtn.addEventListener("click", () => {
@@ -160,6 +228,8 @@
 
 
     </script>
+
+
 
     <style>
         #toolbar {
