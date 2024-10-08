@@ -1,15 +1,19 @@
 const WebSocket = require('ws');
 const https = require('https')
-var fs = require('fs');
+const fs = require('fs');
+const crypto = require("crypto");
+
 let wsStates = {};
 const wsStateFIle = "./wsStates.json";
 let nowUser = ""; //uuid
+// let lastSurvival = new Date().getTime();
+let lastSurvival;
 
 main();
 
 function main(){
     readWsStates();
-    runManageWsServer();
+    // runManageWsServer();
     runManageHttpServer();
     restoreWsStates();
 }
@@ -29,7 +33,6 @@ function readWsStates(){
 function runManageWsServer(){
     const port = 8446;
     const server = new WebSocket.Server({ port: port });
-
     
     // クライアントから接続される場合トリガーされる
     console.log("run manageWsServer");
@@ -69,18 +72,29 @@ function runManageHttpServer(){
         key: fs.readFileSync('./privkey.pem'),
     }
 
-    console.log("管理画面サーバー起動");
     const manageViewServer = https.createServer(options);
+    console.log("管理画面サーバー起動");
     manageViewServer.on('request', (req, res) => {
         const url = req.url;
         let resStr = "wrong url";
-        if(url == "/unifast/index.html" || url == "/unifast" || url == "/unifast/") resStr = fs.readFileSync("./index.html", 'utf-8');
+
+        if(new Date().getTime() - lastSurvival > 6000) nowUser = "";
+
+        if(url == "/unifast/index.html" || url == "/unifast" || url == "/unifast/") {
+            if(nowUser == "") {
+                lastSurvival = new Date().getTime();
+                nowUser = crypto.randomUUID();
+                resStr = fs.readFileSync("./index.html", 'utf-8');
+            } else resStr = fs.readFileSync("./warkingUsingApp.html", 'utf-8');
+        }
         else if(url == "/unifast/wsStates") resStr = makeResData("wsStates", fs.readFileSync(wsStateFIle, 'utf-8'));
         else if(url == "/unifast/addWsState") {
             resStr = makeResData("wsStates", fs.readFileSync(wsStateFIle, 'utf-8'));
-        }else {
-            resStr = makeResData("err", "urlが間違っています")
-        }
+        }else if(url == "/unifast/polling"){
+            lastSurvival = new Date().getTime();
+            resStr = makeResData("polling", "");
+        } 
+        else resStr = makeResData("err", "urlが間違っています");
 
         res.write(resStr);
         res.end()
@@ -89,15 +103,13 @@ function runManageHttpServer(){
     manageViewServer.listen(8445, "galleon.yachiyo.tech");
 }
 
-
 function newWsServer(port){
     const server = new WebSocket.Server({ port: port });
-    // クライアントから接続される場合トリガーされる
+    // addWsStates();
     console.log("run wsServer");
     console.log("port : " + port);
     server.on('connection', (socket) => {
         console.log('Client connected');
-        addWsStates();
     
         // 受信メッセージを処理
         socket.on('message', (data) => {

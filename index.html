@@ -41,11 +41,18 @@
         main();
         function main(){
             sendPostReq("wsStates", "");
+
+            //ポーリング
+            setInterval(()=>{
+                sendPostReq("polling")
+            }, 5000);
         }
 
+        
 
 
-        function sendPostReq(file, strData) {
+
+        function sendPostReq(file, strData="") {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "https://galleon.yachiyo.tech/unifast/" + file);
 
@@ -55,9 +62,11 @@
                     if(json["kind"] == "wsStates") {
                         wsStates = JSON.parse(json["data"]);
                         refreshTable();
-                    }if(json["kind"] == "err") console.log(json["data"]);
-                        
-                } else console.log(`Error: ${xhr.status}`);
+                    }
+                    else if(json["kind"] == "err") console.log(json["data"]);
+                    else if(json["kind"] == "polling") console.log(json["data"]);
+                }
+                else console.log(`Error: ${xhr.status}`);
             };
 
             xhr.send(strData);
