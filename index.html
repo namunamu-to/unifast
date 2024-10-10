@@ -85,9 +85,6 @@
         }
 
 
-
-
-
         function sendPostReq(file, strData = "") {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "https://galleon.yachiyo.tech/unifast/" + file);
@@ -95,6 +92,7 @@
             xhr.onload = () => {
                 if (xhr.readyState == 4) {
                     const json = JSON.parse(xhr.responseText);
+                    console.log();
                     if (json["kind"] == "wsStates") {
                         wsStates = JSON.parse(json["data"]);
                         refreshTable();
@@ -155,12 +153,11 @@
         }
 
         function addWsState(wsName, port, wsKind) {
-            sendStr = {
-                "wsName": wsName,
-                "port": port,
-                "wsKind": wsKind,
-            }
-
+            const sendStr = `{
+                "wsName": "${wsName}",
+                "port": "${port}",
+                "wsKind": "${wsKind}"
+            }`;
 
             sendPostReq("addWsState", sendStr);
         }
@@ -170,8 +167,8 @@
                 <input id="wsNameInput" placeholder="ソケット名">
                 <input id="portInput" placeholder="ポート">
                 <select id="wsKindInput">
-                    <option>クライアント</option>
-                    <option>サーバー</option>
+                    <option>client</option>
+                    <option>server</option>
                 </select>
                 
                 <button id="addDialogBtn">追加</button>
@@ -190,7 +187,7 @@
                 const wsKindIdx = wsKindInput.selectedIndex;
                 const wsKind = wsKindInput.options[wsKindIdx].innerText;
 
-                
+
 
                 addWsState(wsName, port, wsKind);
             });
@@ -198,22 +195,6 @@
             closeDialogBtn.addEventListener("click", () => {
                 dialog("");
             });
-
-            // const socketName = window.prompt("ソケット名");
-            // let port;
-
-            // for (; ;) {
-            //     port = window.prompt("ポート番号")
-            //     if (String(port) in Object.keys(wsStates)) {
-            //         alert("そのポートは使用中です");
-            //         continue;
-            //     }
-
-            //     break;
-            // }
-
-            // socketInfos[port] = {};
-            // addWsState(socketName, port);
         });
 
         delSocketBtn.addEventListener("click", () => {

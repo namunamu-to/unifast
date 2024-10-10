@@ -1,10 +1,1 @@
-{
-    "32452" : {
-        "socketName": "クライアント1",
-        "cron": "",
-        "state": "停止中",
-        "log": "",
-        "script": "",
-        "wsKind": "client"
-    }
-}
+{"12325":{"wsName":"sdkanf","cron":"","state":"停止中","log":"","script":"\n            const socket = new WebSocket('ws://localhost:toPort');\n\n            // 接続ができた時にトリガーされる\n            socket.onopen = () => {\n                console.log('Connected to server');\n            });\n\n            // サーバーのメッセージが受信された時にトリガーされる\n            socket.onmessage = (event) => {\n                console.log(\"Received: \" + event.data});\n            };\n\n            // 接続中止\n            socket.onclose = () => {\n                console.log('Connection closed');\n            };\n        ","wsKind":"client"},"12541":{"wsName":"dkasj","cron":"","state":"停止中","log":"","script":"\n            const socket = new WebSocket('ws://localhost:toPort');\n\n            // 接続ができた時にトリガーされる\n            socket.onopen = () => {\n                console.log('Connected to server');\n            });\n\n            // サーバーのメッセージが受信された時にトリガーされる\n            socket.onmessage = (event) => {\n                console.log(\"Received: \" + event.data});\n            };\n\n            // 接続中止\n            socket.onclose = () => {\n                console.log('Connection closed');\n            };\n        ","wsKind":"client"},"32452":{"socketName":"クライアント1","cron":"","state":"停止中","log":"","script":"","wsKind":"client"}}
